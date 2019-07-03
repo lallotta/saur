@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"strings"
+
+	"github.com/lallotta/saur/internal/aur"
 )
 
 func runCommand(cmd string, args []string) {
@@ -14,11 +16,20 @@ func runCommand(cmd string, args []string) {
 	}
 }
 
-func runSearch(targets []string) {
-	if len(targets) == 0 {
-		log.Fatal("saur search: no targets specified")
+func runSearch(terms []string) {
+	if len(terms) == 0 {
+		log.Fatal("saur search: no search terms specified")
 	}
 
-	fmt.Println("search command")
-	fmt.Println("targets:", targets)
+	// TODO: search should be performed on a single term
+	// and then filtered based on unused terms to find matches.
+	// Joining terms together in this way may not return all expected results.
+	query := strings.Join(terms, " ")
+
+	results, err := aur.Search(query)
+	if err != nil {
+		log.Fatalln("AUR query returned an error:", err)
+	}
+
+	results.Print()
 }
