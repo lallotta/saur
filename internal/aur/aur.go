@@ -38,10 +38,10 @@ type Package struct {
 type queryResult struct {
 	Type    string
 	Error   string
-	Results PkgList
+	Results Pkgs
 }
 
-func request(v url.Values) (PkgList, error) {
+func request(v url.Values) (Pkgs, error) {
 	rpcURL := "https://aur.archlinux.org/rpc/?"
 	v.Set("v", "5")
 
@@ -65,7 +65,7 @@ func request(v url.Values) (PkgList, error) {
 }
 
 // Search performs a search for packages by the default name-desc field
-func Search(query string) (PkgList, error) {
+func Search(query string) (Pkgs, error) {
 	v := url.Values{}
 	v.Set("type", "search")
 	v.Set("arg", query)
@@ -73,7 +73,7 @@ func Search(query string) (PkgList, error) {
 }
 
 // Info requests package information for the given package names
-func Info(pkgNames []string) (PkgList, error) {
+func Info(pkgNames []string) (Pkgs, error) {
 	v := url.Values{}
 	v.Set("type", "info")
 

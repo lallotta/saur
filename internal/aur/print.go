@@ -3,21 +3,24 @@ package aur
 import (
 	"fmt"
 	"time"
+
+	"github.com/lallotta/saur/internal/colors"
 )
 
-// TODO: colorize output and implement functions print package info
+// TODO: implement functions to print package info
 
-// PkgList holds the packages returned from a query
-type PkgList []Package
+// Pkgs holds the packages returned from a query
+type Pkgs []Package
 
 // Print prints search results
-func (pkgs PkgList) Print() {
+func (pkgs Pkgs) Print() {
 	for _, pkg := range pkgs {
-		fmt.Printf("%s %s", pkg.Name, pkg.Version)
+		fmt.Printf(colors.Bold("%s %s"), pkg.Name, colors.Blue(pkg.Version))
 
 		if pkg.OutOfDate > 0 {
 			year, month, day := time.Unix(int64(pkg.OutOfDate), 0).Date()
-			fmt.Printf(" (Out of Date %d-%02d-%d)", year, month, day)
+			str := fmt.Sprintf(" Out of Date %d-%02d-%02d", year, month, day)
+			fmt.Print(colors.Bold(colors.Red(str)))
 		}
 
 		fmt.Printf("\n    %s\n", pkg.Description)
