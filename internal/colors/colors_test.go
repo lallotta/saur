@@ -14,7 +14,7 @@ func TestColors(t *testing.T) {
 		{"Bold", bold, Bold},
 		{"Red", redFg, Red},
 		{"Green", greenFg, Green},
-		{"Brown", brownFg, Brown},
+		{"Yellow", yellowFg, Yellow},
 		{"Blue", blueFg, Blue},
 		{"Magenta", magentaFg, Magenta},
 		{"Cyan", cyanFg, Cyan},

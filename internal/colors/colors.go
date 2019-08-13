@@ -17,7 +17,7 @@ const (
 const (
 	redFg parameter = 31 + iota
 	greenFg
-	brownFg
+	yellowFg
 	blueFg
 	magentaFg
 	cyanFg
@@ -44,9 +44,9 @@ func Green(s string) string {
 	return styleString(s, greenFg)
 }
 
-// Brown returns the input string with a brown foreground
-func Brown(s string) string {
-	return styleString(s, brownFg)
+// Yellow returns the input string with a yellow foreground
+func Yellow(s string) string {
+	return styleString(s, yellowFg)
 }
 
 // Blue returns the input string with a blue foreground
