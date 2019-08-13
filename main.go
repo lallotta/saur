@@ -11,8 +11,8 @@ func usage() {
 	fmt.Fprintln(os.Stderr, `Usage: saur <command> [...]
 	
 Commands:
-	search <query>    Search by package name and description`)
-	os.Exit(2)
+	search <search term(s)>    Search by package name and description
+	get    <package(s)>        Get PKGBUILD`)
 }
 
 func main() {
@@ -23,10 +23,10 @@ func main() {
 	args := flag.Args()
 	if len(args) == 0 {
 		usage()
+		os.Exit(1)
 	}
 
-	cmd := args[0]
-	args = args[1:]
-
-	runCommand(cmd, args)
+	if err := runCommand(args[0], args[1:]); err != nil {
+		log.Fatal(err)
+	}
 }
