@@ -35,12 +35,12 @@ func (pkg Package) PrintInfo() {
 	printFieldInfo("Version", pkg.Version)
 	printFieldInfo("Description", pkg.Description)
 	printFieldInfo("URL", pkg.URL)
-	printFieldInfo("Keywords", strings.Join(pkg.Keywords, " "))
 	printFieldInfo("Licenses", strings.Join(pkg.License, " "))
 	printFieldInfo("Groups", strings.Join(pkg.Groups, " "))
-	printFieldInfo("Provides", strings.Join(pkg.Provides, " "))
 	printFieldInfo("Depends On", strings.Join(pkg.Depends, " "))
+	printFieldInfo("Make Deps", strings.Join(pkg.MakeDepends, " "))
 	printFieldInfo("Optional Deps", strings.Join(pkg.OptDepends, " "))
+	printFieldInfo("Check Deps", strings.Join(pkg.CheckDepends, " "))
 	printFieldInfo("Conflicts With", strings.Join(pkg.Conflicts, " "))
 	printFieldInfo("Replaces", strings.Join(pkg.Replaces, " "))
 	printFieldInfo("Maintainer", pkg.Maintainer)
@@ -54,6 +54,8 @@ func (pkg Package) PrintInfo() {
 	} else {
 		printFieldInfo("Out of Date", "No")
 	}
+
+	fmt.Println()
 }
 
 func printFieldInfo(field, value string) {
