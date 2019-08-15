@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -14,28 +13,19 @@ import (
 	"github.com/lallotta/saur/internal/colors"
 )
 
-var (
-	infoPrefix    string
-	warningPrefix string
-	errorPrefix   string
-)
+const arrow = "==>"
 
-func init() {
-	prefix := "::"
-	infoPrefix = colors.Cyan(prefix)
-	warningPrefix = colors.Yellow(prefix)
-	errorPrefix = colors.Red(prefix)
-}
-
-type errorSlice struct {
+// errorGroup is a collection of errors
+type errorGroup struct {
 	errors []error
 }
 
-func (e *errorSlice) add(err error) {
+// add adds a new error to the group
+func (e *errorGroup) add(err error) {
 	e.errors = append(e.errors, err)
 }
 
-func (e *errorSlice) Error() string {
+func (e *errorGroup) Error() string {
 	s := ""
 	for _, err := range e.errors {
 		s += err.Error() + "\n"
@@ -43,7 +33,9 @@ func (e *errorSlice) Error() string {
 	return s
 }
 
-func (e *errorSlice) returnError() error {
+// returnError returns an error representing
+// any collected errors
+func (e *errorGroup) returnError() error {
 	if len(e.errors) > 0 {
 		return e
 	}
@@ -56,23 +48,25 @@ func runCommand(cmd string, args []string) error {
 		return runSearch(args)
 	case "get":
 		return runGet(args)
+	case "info":
+		return runInfo(args)
 	}
-	return fmt.Errorf("%s invalid command: '%s' (use -h for help)", errorPrefix, cmd)
+	return errorf("invalid command: '%s' (use -h for help)", cmd)
 }
 
 func runSearch(terms []string) error {
 	if len(terms) == 0 {
-		return errors.New(errorPrefix + "no search terms specified")
+		return errorf("no search terms specified")
 	}
 
-	// TODO: search should be performed on a single term
-	// and then filtered based on unused terms to find matches.
-	// Joining terms together in this way may not return all expected results.
+	// TODO: Perform search on a single term and filter
+	// based on unused terms to find matches. Joining terms
+	// together in this way may not return all expected results.
 	query := strings.Join(terms, " ")
 
 	results, err := aur.Search(query)
 	if err != nil {
-		return fmt.Errorf("%s error querying AUR: %v", errorPrefix, err)
+		return errorf("AUR query error: %v", err)
 	}
 
 	results.Print()
@@ -82,7 +76,7 @@ func runSearch(terms []string) error {
 
 func runGet(targets []string) error {
 	if len(targets) == 0 {
-		return errors.New(errorPrefix + "no packages specified")
+		return errorf("no packages specified")
 	}
 
 	dir, err := os.Getwd()
@@ -92,51 +86,94 @@ func runGet(targets []string) error {
 
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-	var errs errorSlice
+	var errs errorGroup
 
+	colonPrintln("Requesting package info...")
 	pkgs, err := aur.Info(targets)
 	if err != nil {
-		return fmt.Errorf("%s error querying AUR: %v", errorPrefix, err)
+		return errorf("AUR query error: %v", err)
 	}
 
-	// Create map of package names
-	found := make(map[string]bool)
+	found := make(map[string]struct{})
 	for _, pkg := range pkgs {
-		found[pkg.Name] = true
+		found[pkg.Name] = struct{}{}
 	}
 
 	download := func(name string) {
 		defer wg.Done()
 		if err := fetch.GetPkgbuild(name); err != nil {
 			mu.Lock()
-			errs.add(fmt.Errorf("%s error downloading '%s': %v", errorPrefix, name, err))
+			errs.add(errorf("failure downloading '%s': %v", name, err))
 			mu.Unlock()
 			return
 		}
-		log.Println("Finished downloading", name)
+		fmt.Println("Downloaded PKGBUILD:", name)
 	}
 
-	log.Println(colors.Bold(infoPrefix + " Downloading PKGBUILDs..."))
+	colonPrintln("Downloading PKGBUILDs...")
 	for _, target := range targets {
-		if !found[target] {
-			errs.add(fmt.Errorf("%s target not found: '%s'", errorPrefix, target))
-			continue
-		}
+		if _, ok := found[target]; !ok {
+			errs.add(errorf("package not found: '%s'", target))
+		} else {
+			_, err = os.Stat(filepath.Join(dir, target))
+			if err == nil {
+				warnPrintf("'%s' already exists\n", target)
+				continue
+			} else if !os.IsNotExist(err) {
+				log.Println(colors.Bold(colors.Red(arrow)), err)
+				continue
+			}
 
-		_, err = os.Stat(filepath.Join(dir, target))
-		if err == nil {
-			log.Printf("%s '%s' already exists", warningPrefix, target)
-			continue
-		} else if !os.IsNotExist(err) {
-			log.Println(errorPrefix, err)
-			continue
+			wg.Add(1)
+			go download(target)
 		}
-		wg.Add(1)
-		go download(target)
-
 	}
 
 	wg.Wait()
 
 	return errs.returnError()
+}
+
+func runInfo(targets []string) error {
+	if len(targets) == 0 {
+		return errorf("no packages specified")
+	}
+
+	var errs errorGroup
+
+	pkgs, err := aur.Info(targets)
+	if err != nil {
+		return errorf("AUR query error: %v", err)
+	}
+
+	found := make(map[string]int)
+	for i, pkg := range pkgs {
+		found[pkg.Name] = i
+	}
+
+	for _, target := range targets {
+		if idx, ok := found[target]; !ok {
+			errs.add(errorf("package not found: '%s'", target))
+		} else {
+			pkg := pkgs[idx]
+			pkg.PrintInfo()
+		}
+	}
+
+	return errs.returnError()
+}
+
+func errorf(format string, a ...interface{}) error {
+	format = colors.Bold(colors.Red("error: ")) + format
+	return fmt.Errorf(format, a...)
+}
+
+func colonPrintln(a ...interface{}) (n int, err error) {
+	colon := colors.Bold(colors.Cyan("::"))
+	return fmt.Println(colon, colors.Bold(fmt.Sprint(a...)))
+}
+
+func warnPrintf(format string, a ...interface{}) (n int, err error) {
+	format = colors.Bold(colors.Yellow(arrow)) + " " + format
+	return fmt.Printf(format, a...)
 }

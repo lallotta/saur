@@ -8,11 +8,12 @@ import (
 )
 
 func usage() {
-	fmt.Fprintln(os.Stderr, `Usage: saur <command> [...]
+	fmt.Fprintln(os.Stderr, `Usage: saur <command> <argument(s)>
 	
 Commands:
 	search <search term(s)>    Search by package name and description
-	get    <package(s)>        Get PKGBUILD`)
+	get    <package(s)>        Get PKGBUILD
+	info   <package(s)>        Print package information`)
 }
 
 func main() {
