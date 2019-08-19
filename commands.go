@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -17,26 +18,22 @@ const arrow = "==>"
 
 // errorGroup is a collection of errors
 type errorGroup struct {
-	errors []error
+	buf bytes.Buffer
 }
 
 // add adds a new error to the group
 func (e *errorGroup) add(err error) {
-	e.errors = append(e.errors, err)
+	e.buf.WriteString(err.Error() + "\n")
 }
 
 func (e *errorGroup) Error() string {
-	s := ""
-	for _, err := range e.errors {
-		s += err.Error() + "\n"
-	}
-	return s
+	return e.buf.String()
 }
 
 // returnError returns an error representing
 // any collected errors
 func (e *errorGroup) returnError() error {
-	if len(e.errors) > 0 {
+	if e.buf.Len() > 0 {
 		return e
 	}
 	return nil
