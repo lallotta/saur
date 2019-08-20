@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -76,11 +75,6 @@ func runGet(targets []string) error {
 		return errorf("no packages specified")
 	}
 
-	dir, err := os.Getwd()
-	if err != nil {
-		return err
-	}
-
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var errs errorGroup
@@ -112,7 +106,7 @@ func runGet(targets []string) error {
 		if _, ok := found[target]; !ok {
 			errs.add(errorf("package not found: '%s'", target))
 		} else {
-			_, err = os.Stat(filepath.Join(dir, target))
+			_, err = os.Stat(target)
 			if err == nil {
 				warnPrintf("'%s' already exists\n", target)
 				continue
