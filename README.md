@@ -10,17 +10,8 @@ Saur is my personal AUR helper for downloading PKGBUILDs and querying the AUR.
 
 ## Usage
 
-Search AUR:
-```
-saur search <search term(s)>
-```
+Search AUR: `saur search <search term(s)>`
 
-Print package information:
-```
-saur info <package(s)>
-```
+Print package information: `saur info <package(s)>`
 
-Download PKGBUILD:
-```
-saur get <package(s)>
-```
+Download PKGBUILD(s): `saur get <package(s)>`
