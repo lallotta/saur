@@ -72,7 +72,7 @@ func runSearch(terms []string) error {
 
 func runGet(targets []string) error {
 	if len(targets) == 0 {
-		return errorf("no packages specified")
+		return errorf("no targets specified")
 	}
 
 	var wg sync.WaitGroup
